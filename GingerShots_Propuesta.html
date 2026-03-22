@@ -118,11 +118,20 @@
   @keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
 
   /* ── CARTA ── */
-  #carta { padding:80px 48px; max-width:1200px; margin:0 auto; position:relative; z-index:2; }
+  #carta { padding:80px 48px; max-width:1200px; margin:0 auto; position:relative; z-index:2; display:flex; flex-direction:column; gap:3px; }
   .carta-box { background:var(--dark3); border:1px solid rgba(245,197,24,.12); padding:64px; position:relative; overflow:hidden; }
   .carta-box::after { content:'"'; position:absolute; top:-20px;right:40px; font-family:'Bebas Neue',sans-serif; font-size:200px; color:rgba(245,197,24,.04); line-height:1; }
+  .carta-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(28px,4vw,48px); line-height:1; letter-spacing:2px; margin-bottom:32px; color:var(--white); }
   .carta-text { font-size:20px; line-height:1.9; color:rgba(245,240,232,.85); font-weight:300; max-width:700px; font-style:italic; }
   .carta-firma { margin-top:40px; font-family:'Syne',sans-serif; font-weight:700; font-size:14px; letter-spacing:2px; color:var(--yellow); }
+
+  /* ── CARTA — Bloque prueba en vivo ── */
+  .carta-prueba { background:var(--yellow); padding:64px; position:relative; overflow:hidden; }
+  .carta-prueba-tag { font-family:'Syne',sans-serif; font-size:10px; letter-spacing:4px; color:rgba(13,13,13,.55); text-transform:uppercase; margin-bottom:20px; }
+  .carta-prueba-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(32px,5vw,58px); color:var(--dark); line-height:1.05; margin-bottom:24px; }
+  .carta-prueba-body { font-size:16px; line-height:1.8; color:rgba(13,13,13,.68); font-weight:300; max-width:680px; margin-bottom:40px; }
+  .carta-prueba-pills { display:flex; flex-wrap:wrap; gap:10px; }
+  .carta-prueba-pill { background:rgba(13,13,13,.1); border:1px solid rgba(13,13,13,.22); color:var(--dark); font-family:'Syne',sans-serif; font-size:11px; letter-spacing:2px; padding:8px 18px; text-transform:uppercase; }
 
   /* ── DIAGNÓSTICO ── */
   .diag-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:64px; }
@@ -341,7 +350,7 @@
     .cta-steps { flex-direction:column; align-items:center; }
     .cta-btn-group { flex-direction:column; align-items:center; }
     footer { flex-direction:column; gap:12px; text-align:center; }
-    .carta-box,.prueba-box { padding:40px 28px; }
+    .carta-box,.prueba-box,.carta-prueba { padding:40px 28px; }
     .timeline-item { grid-template-columns:48px 1fr; gap:20px; }
   }
 </style>
@@ -393,10 +402,26 @@
 
 <!-- CARTA -->
 <div id="carta">
+  <!-- Bloque 1: Carta personal -->
   <div class="carta-box reveal">
-    <p class="section-label">Para empezar</p>
-    <p class="carta-text">"Esta página que está viendo fue creada por mí, enteramente desde cero y en menos de un día. Es completamente personalizable, escalable y adaptable. Se la presento porque quiero mostrarle no solo una idea — sino lo que soy capaz de construir. GingerShots merece crecer, y yo tengo las herramientas para hacerlo posible."</p>
+    <p class="section-label">Antes de empezar</p>
+    <h2 class="carta-title">Antes de empezar — Una carta</h2>
+    <p class="carta-text">Tía, este documento no es un contrato ni una obligación. Es una idea que quiero compartirte porque creo que lo que estás haciendo con GingerShots tiene muchísimo más potencial del que alcanza una sola persona. Lo que ves aquí es un plan concreto para crecer juntos — usted en Santa Cruz, yo en La Paz — aprovechando lo que cada uno sabe hacer mejor. Léalo con calma, y después hablamos.</p>
     <p class="carta-firma">— Juan José</p>
+  </div>
+  <!-- Bloque 2: Prueba en vivo -->
+  <div class="carta-prueba reveal">
+    <p class="carta-prueba-tag">Prueba en vivo</p>
+    <h2 class="carta-prueba-title">Lo que está viendo ahora mismo fue construido por mí.</h2>
+    <p class="carta-prueba-body">Esta página web fue creada enteramente desde cero, en menos de un día, sin plantillas ni agencias. Todo el diseño, las animaciones y el código fue hecho a mano. Es 100% personalizable, escalable y adaptable. Esto es exactamente lo que puedo construir para GingerShots.</p>
+    <div class="carta-prueba-pills">
+      <span class="carta-prueba-pill">Diseño original</span>
+      <span class="carta-prueba-pill">Animaciones a medida</span>
+      <span class="carta-prueba-pill">Listo en &lt; 24h</span>
+      <span class="carta-prueba-pill">Sin plantillas</span>
+      <span class="carta-prueba-pill">Escalable</span>
+      <span class="carta-prueba-pill">Adaptable</span>
+    </div>
   </div>
 </div>
 
@@ -801,8 +826,8 @@ function drawHexGrid() {
   const cols = Math.ceil(W / (size * 1.5)) + 3;
   const rows = Math.ceil(H / (size * Math.sqrt(3))) + 3;
   const offsetY = (scrollY * 0.06) % (size * Math.sqrt(3));
-  ctx.strokeStyle = 'rgba(245,197,24,0.055)';
-  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = 'rgba(245,197,24,0.13)';
+  ctx.lineWidth = 1.0;
   for (let c = -1; c < cols; c++) {
     for (let r = -1; r < rows; r++) {
       const x = c * size * 1.5;
@@ -829,7 +854,7 @@ class Particle {
     this.r     = Math.random() * 2.2 + 0.8;          // bigger dots
     this.vx    = (Math.random() - .5) * 0.18;
     this.vy    = -(Math.random() * 0.4 + 0.08);
-    this.a     = Math.random() * 0.55 + 0.25;         // more visible
+    this.a     = Math.random() * 0.55 + 0.42;         // more visible
     this.pulse = Math.random() * Math.PI * 2;
     this.shape = Math.random() < .35 ? 'line' : 'dot';
     this.len   = Math.random() * 28 + 10;
@@ -838,8 +863,8 @@ class Particle {
   }
   update() {
     this.pulse += 0.009;
-    this.x += this.vx + (mouseX / W - 0.5) * this.parallax * 0.8;
-    this.y += this.vy - (scrollY * this.parallax * 0.0012);
+    this.x += this.vx + (mouseX / W - 0.5) * this.parallax * 1.2;
+    this.y += this.vy + (mouseY / H - 0.5) * this.parallax * 0.5 - (scrollY * this.parallax * 0.0014);
     if (this.y < -40) this.reset(false);
     if (this.x < -10) this.x = W + 10;
     if (this.x > W + 10) this.x = -10;
@@ -885,7 +910,7 @@ function loop() {
       const dy = particles[i].y - particles[j].y;
       const d  = Math.sqrt(dx * dx + dy * dy);
       if (d < 100) {
-        ctx.globalAlpha = (1 - d / 100) * 0.12;
+        ctx.globalAlpha = (1 - d / 100) * 0.22;
         ctx.strokeStyle = 'rgba(245,197,24,1)';
         ctx.beginPath();
         ctx.moveTo(particles[i].x, particles[i].y);
