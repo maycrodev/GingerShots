@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GingerShots — Propuesta de Expansión</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #F5C518;
+    --dark: #0D0D0D;
+    --dark3: #1C1C1C;
+    --dark4: #242424;
+    --white: #F5F0E8;
+    --gray: #888880;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--dark); color: var(--white); font-family: 'DM Sans', sans-serif; overflow-x: hidden; cursor: none; }
+
+  /* ── CURSOR: solo punto ── */
+  .cursor {
+    width: 8px; height: 8px;
+    background: var(--yellow);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width .15s, height .15s, opacity .15s;
+  }
+  .cursor.active { width: 14px; height: 14px; opacity: .7; }
+
+  /* ── CANVAS PARALLAX ── */
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: .9;
+  }
+
+  /* ── NOISE ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 1; opacity: .5;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar { position: fixed; top:0; left:0; height:2px; background: var(--yellow); z-index:9998; transition: width .1s linear; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    padding: 18px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(to bottom, rgba(13,13,13,.96), transparent);
+  }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px; color:var(--yellow); }
+  .nav-links { display:flex; gap:28px; list-style:none; }
+  .nav-links a { color:var(--gray); text-decoration:none; font-size:11px; letter-spacing:2px; text-transform:uppercase; transition:color .3s; font-family:'Syne',sans-serif; font-weight:600; }
+  .nav-links a:hover { color:var(--yellow); }
+
+  /* ── SECTIONS ── */
+  section { position:relative; z-index:2; padding:120px 48px; max-width:1200px; margin:0 auto; }
+  .reveal { opacity:0; transform:translateY(36px); transition:opacity .8s ease, transform .8s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1 { transition-delay:.1s; }
+  .reveal-delay-2 { transition-delay:.2s; }
+  .reveal-delay-3 { transition-delay:.3s; }
+  .reveal-delay-4 { transition-delay:.4s; }
+
+  .section-label { font-family:'Syne',sans-serif; font-size:10px; letter-spacing:4px; color:var(--yellow); text-transform:uppercase; margin-bottom:14px; }
+  .section-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(48px,7vw,80px); line-height:1; letter-spacing:2px; margin-bottom:22px; }
+  .section-title em { color:var(--yellow); font-style:normal; }
+  .section-body { font-size:16px; line-height:1.8; color:var(--gray); max-width:640px; font-weight:300; }
+
+  .divider { position:relative; z-index:2; width:calc(100% - 96px); height:1px; background:linear-gradient(to right,transparent,rgba(245,197,24,.25),transparent); margin:0 48px; }
+
+  /* ── HERO ── */
+  #hero {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:120px 48px 80px; position:relative; overflow:hidden; z-index:2;
+  }
+  .hero-bg { position:absolute; inset:0; background: radial-gradient(ellipse 70% 55% at 62% 38%, rgba(245,197,24,.07) 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 20% 80%, rgba(232,144,10,.05) 0%, transparent 60%); }
+  .hero-ring { position:absolute; border-radius:50%; border:1px solid rgba(245,197,24,.05); animation:spin 50s linear infinite; }
+  .hero-ring:nth-child(1) { width:640px;height:640px; top:-120px; right:-120px; }
+  .hero-ring:nth-child(2) { width:420px;height:420px; top:20px; right:40px; animation-duration:75s; animation-direction:reverse; border-color:rgba(245,197,24,.03); }
+  @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+  .hero-content { position:relative; z-index:2; max-width:1200px; width:100%; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+  .hero-eyebrow { font-family:'Syne',sans-serif; font-size:11px; letter-spacing:4px; color:var(--yellow); text-transform:uppercase; margin-bottom:22px; opacity:0; animation:fadeUp .8s ease .2s forwards; }
+  .hero-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(80px,12vw,140px); line-height:.9; letter-spacing:2px; opacity:0; animation:fadeUp .8s ease .4s forwards; }
+  .hero-title span { color:var(--yellow); display:block; }
+  .hero-sub { margin-top:28px; font-size:16px; line-height:1.7; color:var(--gray); max-width:420px; font-weight:300; opacity:0; animation:fadeUp .8s ease .6s forwards; }
+  .hero-cta { margin-top:44px; display:inline-flex; align-items:center; gap:12px; background:var(--yellow); color:var(--dark); padding:16px 32px; font-family:'Syne',sans-serif; font-weight:700; font-size:13px; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:all .3s; opacity:0; animation:fadeUp .8s ease .8s forwards; }
+  .hero-cta:hover { background:var(--white); transform:translateX(4px); }
+  .hero-cta svg { transition:transform .3s; }
+  .hero-cta:hover svg { transform:translateX(4px); }
+  .hero-right { opacity:0; animation:fadeIn 1.2s ease .6s forwards; }
+  .hero-card { background:var(--dark3); border:1px solid rgba(245,197,24,.15); padding:40px; position:relative; }
+  .hero-card::before { content:''; position:absolute; top:0;left:0; width:3px;height:100%; background:var(--yellow); }
+  .hero-card-title { font-family:'Syne',sans-serif; font-size:11px; letter-spacing:3px; color:var(--yellow); text-transform:uppercase; margin-bottom:24px; }
+  .hero-stat { display:flex; justify-content:space-between; align-items:flex-end; padding:14px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+  .hero-stat:last-child { border-bottom:none; }
+  .hero-stat-label { font-size:13px; color:var(--gray); font-weight:300; }
+  .hero-stat-value { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--white); letter-spacing:1px; }
+  .hero-stat-value.accent { color:var(--yellow); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .scroll-ind { position:absolute; bottom:36px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; opacity:0; animation:fadeIn 1s ease 1.6s forwards; }
+  .scroll-ind span { font-size:10px; letter-spacing:3px; color:var(--gray); text-transform:uppercase; font-family:'Syne',sans-serif; }
+  .scroll-line { width:1px; height:36px; background:linear-gradient(to bottom, var(--yellow), transparent); animation:pulse 2s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+  /* ── CARTA ── */
+  #carta { padding:80px 48px; max-width:1200px; margin:0 auto; position:relative; z-index:2; }
+  .carta-box { background:var(--dark3); border:1px solid rgba(245,197,24,.12); padding:64px; position:relative; overflow:hidden; }
+  .carta-box::after { content:'"'; position:absolute; top:-20px;right:40px; font-family:'Bebas Neue',sans-serif; font-size:200px; color:rgba(245,197,24,.04); line-height:1; }
+  .carta-text { font-size:20px; line-height:1.9; color:rgba(245,240,232,.85); font-weight:300; max-width:700px; font-style:italic; }
+  .carta-firma { margin-top:40px; font-family:'Syne',sans-serif; font-weight:700; font-size:14px; letter-spacing:2px; color:var(--yellow); }
+
+  /* ── DIAGNÓSTICO ── */
+  .diag-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:64px; }
+  .diag-card { background:var(--dark3); padding:48px; position:relative; transition:background .3s; }
+  .diag-card:hover { background:var(--dark4); }
+  .diag-card.positive::before,.diag-card.negative::before { content:''; position:absolute; top:0;left:0; width:100%;height:3px; }
+  .diag-card.positive::before { background:var(--yellow); }
+  .diag-card.negative::before { background:rgba(255,255,255,.12); }
+  .diag-card-label { font-family:'Syne',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; margin-bottom:24px; }
+  .diag-card.positive .diag-card-label { color:var(--yellow); }
+  .diag-card.negative .diag-card-label { color:var(--gray); }
+  .diag-item { display:flex; align-items:flex-start; gap:14px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:14px; line-height:1.6; color:rgba(245,240,232,.7); }
+  .diag-item:last-child { border-bottom:none; }
+  .diag-dot { width:6px;height:6px; border-radius:50%; flex-shrink:0; margin-top:7px; }
+  .positive .diag-dot { background:var(--yellow); }
+  .negative .diag-dot { background:rgba(255,255,255,.2); }
+
+  /* ── PROPUESTA ── */
+  .propuesta-header { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:end; margin-bottom:80px; }
+  .deal-cards { display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:48px; }
+  .deal-card { background:var(--dark3); padding:48px; }
+  .deal-card.featured { background:var(--yellow); }
+  .deal-card-who { font-family:'Bebas Neue',sans-serif; font-size:36px; letter-spacing:2px; margin-bottom:8px; }
+  .deal-card.featured .deal-card-who { color:var(--dark); }
+  .deal-card-role { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:'Syne',sans-serif; font-weight:600; margin-bottom:32px; padding-bottom:24px; border-bottom:1px solid rgba(255,255,255,.1); color:var(--gray); }
+  .deal-card.featured .deal-card-role { color:rgba(13,13,13,.6); border-bottom-color:rgba(13,13,13,.15); }
+  .deal-item { display:flex; gap:12px; margin-bottom:16px; font-size:14px; line-height:1.5; color:rgba(245,240,232,.7); }
+  .deal-card.featured .deal-item { color:rgba(13,13,13,.75); }
+  .deal-icon { color:var(--yellow); flex-shrink:0; margin-top:1px; }
+  .deal-card.featured .deal-icon { color:var(--dark); }
+  .split-section { display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:2px; }
+  .split-box { background:var(--dark3); padding:48px; }
+  .split-number { font-family:'Bebas Neue',sans-serif; font-size:72px; color:var(--yellow); line-height:1; }
+  .split-label { font-family:'Syne',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--gray); margin-top:8px; margin-bottom:24px; }
+  .split-desc { font-size:14px; line-height:1.7; color:rgba(245,240,232,.6); font-weight:300; }
+
+  /* ── TECH ── */
+  .tech-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; margin-top:64px; }
+  .tech-card { background:var(--dark3); padding:40px; transition:background .3s, transform .3s; position:relative; overflow:hidden; }
+  .tech-card:hover { background:var(--dark4); transform:translateY(-4px); }
+  .tech-card::after { content:''; position:absolute; bottom:0;left:0; width:100%;height:2px; background:var(--yellow); transform:scaleX(0); transition:transform .4s ease; transform-origin:left; }
+  .tech-card:hover::after { transform:scaleX(1); }
+  .tech-icon { width:48px;height:48px; background:rgba(245,197,24,.1); border:1px solid rgba(245,197,24,.2); display:flex; align-items:center; justify-content:center; margin-bottom:24px; color:var(--yellow); }
+  .tech-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:12px; color:var(--white); }
+  .tech-desc { font-size:13px; line-height:1.7; color:var(--gray); font-weight:300; }
+  .tech-tag { display:inline-block; margin-top:20px; background:rgba(245,197,24,.1); color:var(--yellow); font-family:'Syne',sans-serif; font-size:10px; letter-spacing:2px; padding:4px 10px; text-transform:uppercase; }
+
+  /* ── PRODUCCIÓN ── */
+  .prod-split { display:grid; grid-template-columns:1.2fr .8fr; gap:80px; align-items:start; margin-top:64px; }
+  .prod-table { border:1px solid rgba(245,197,24,.1); overflow:hidden; }
+  .prod-table-header { display:grid; grid-template-columns:2fr 1fr 1fr; background:rgba(245,197,24,.08); padding:16px 24px; font-family:'Syne',sans-serif; font-size:10px; letter-spacing:2px; color:var(--yellow); text-transform:uppercase; gap:16px; }
+  .prod-table-row { display:grid; grid-template-columns:2fr 1fr 1fr; padding:16px 24px; border-top:1px solid rgba(255,255,255,.05); font-size:13px; line-height:1.5; color:rgba(245,240,232,.7); gap:16px; transition:background .2s; }
+  .prod-table-row:hover { background:rgba(245,197,24,.04); }
+  .prod-table-row.total { background:rgba(245,197,24,.06); color:var(--yellow); font-family:'Syne',sans-serif; font-weight:700; font-size:14px; }
+  .prod-highlight { background:var(--dark3); border:1px solid rgba(245,197,24,.12); padding:40px; margin-bottom:2px; }
+  .prod-highlight-title { font-family:'Bebas Neue',sans-serif; font-size:42px; color:var(--yellow); line-height:1; margin-bottom:4px; }
+  .prod-highlight-sub { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gray); font-family:'Syne',sans-serif; margin-bottom:24px; }
+  .prod-highlight-text { font-size:14px; line-height:1.7; color:rgba(245,240,232,.6); font-weight:300; }
+
+  /* ── MÁQUINAS ── */
+  .maq-hero { background:var(--dark3); padding:72px 56px; display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:center; margin-top:64px; border:1px solid rgba(245,197,24,.08); position:relative; overflow:hidden; }
+  .maq-hero::before { content:'24/7'; position:absolute; right:-20px;top:-40px; font-family:'Bebas Neue',sans-serif; font-size:200px; color:rgba(245,197,24,.03); line-height:1; pointer-events:none; }
+  .maq-stat-big { font-family:'Bebas Neue',sans-serif; font-size:100px; color:var(--yellow); line-height:1; }
+  .maq-stat-label { font-size:14px; color:var(--gray); font-weight:300; margin-top:8px; line-height:1.6; }
+  .maq-feature { display:flex; gap:20px; padding:20px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+  .maq-feature:last-child { border-bottom:none; }
+  .maq-feature-num { font-family:'Bebas Neue',sans-serif; font-size:32px; color:rgba(245,197,24,.3); line-height:1; min-width:40px; }
+  .maq-feature-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:4px; }
+  .maq-feature-desc { font-size:13px; color:var(--gray); font-weight:300; line-height:1.6; }
+  .maq-locations { display:grid; grid-template-columns:repeat(2,1fr); gap:2px; margin-top:2px; }
+  .maq-loc { background:var(--dark3); padding:32px; display:flex; justify-content:space-between; align-items:flex-start; transition:background .3s; }
+  .maq-loc:hover { background:var(--dark4); }
+  .maq-loc-name { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:4px; }
+  .maq-loc-sub { font-size:12px; color:var(--gray); }
+  .maq-loc-stat { text-align:right; }
+  .maq-loc-num { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--yellow); }
+  .maq-loc-unit { font-size:10px; color:var(--gray); letter-spacing:1px; }
+
+  /* ── TIMELINE: numbered badges ── */
+  #ruta {}
+  .timeline { margin-top:64px; display:flex; flex-direction:column; gap:3px; }
+  .timeline-item { display:grid; grid-template-columns:110px 1fr; gap:0; }
+  .timeline-badge {
+    background:var(--dark4);
+    border-right:3px solid var(--yellow);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:28px 12px; gap:4px;
+    transition:background .3s;
+  }
+  .timeline-item:hover .timeline-badge { background:rgba(245,197,24,.07); }
+  .timeline-badge-num {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:42px; color:var(--yellow); line-height:1;
+  }
+  .timeline-badge-label {
+    font-family:'Syne',sans-serif; font-size:9px; letter-spacing:2px;
+    color:rgba(245,197,24,.5); text-transform:uppercase; text-align:center; line-height:1.3;
+  }
+  .timeline-content { background:var(--dark3); padding:28px 36px; transition:background .3s; }
+  .timeline-content:hover { background:var(--dark4); }
+  .timeline-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:14px; color:var(--white); }
+  .timeline-tasks { display:flex; flex-direction:column; gap:8px; }
+  .timeline-task { display:flex; gap:12px; font-size:13px; color:rgba(245,240,232,.6); line-height:1.5; }
+  .timeline-task::before { content:'→'; color:var(--yellow); flex-shrink:0; }
+
+  /* ── PROYECCIÓN ── */
+  .proy-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; margin:64px 0; }
+  .proy-card { background:var(--dark3); padding:40px 32px; text-align:center; position:relative; overflow:hidden; transition:background .3s; }
+  .proy-card:hover { background:var(--dark4); }
+  .proy-card.main { background:var(--yellow); grid-column:span 2; }
+  .proy-card.main .proy-value { color:var(--dark); font-size:64px; }
+  .proy-card.main .proy-label { color:rgba(13,13,13,.6); }
+  .proy-card.main .proy-sub { color:rgba(13,13,13,.5); }
+  .proy-value { font-family:'Bebas Neue',sans-serif; font-size:48px; color:var(--yellow); line-height:1; }
+  .proy-label { font-family:'Syne',sans-serif; font-size:11px; letter-spacing:2px; color:var(--gray); text-transform:uppercase; margin-top:8px; }
+  .proy-sub { font-size:12px; color:rgba(245,240,232,.4); margin-top:6px; font-weight:300; }
+
+  /* ── GANA ── */
+  .ganamos { display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:2px; }
+  .gana-card { padding:56px; position:relative; overflow:hidden; }
+  .gana-card.tia { background:var(--dark3); }
+  .gana-card.yo { background:var(--dark4); }
+  .gana-who { font-family:'Bebas Neue',sans-serif; font-size:48px; margin-bottom:8px; line-height:1; }
+  .gana-card.tia .gana-who { color:var(--yellow); }
+  .gana-card.yo .gana-who { color:var(--white); }
+  .gana-role { font-size:11px; letter-spacing:2px; text-transform:uppercase; font-family:'Syne',sans-serif; color:var(--gray); margin-bottom:32px; }
+  .gana-item { display:flex; gap:12px; margin-bottom:14px; font-size:14px; line-height:1.5; color:rgba(245,240,232,.65); }
+  .gana-check { color:var(--yellow); flex-shrink:0; }
+
+  /* ── ANÁLISIS DE DATOS ── */
+  .datos-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; margin-top:64px; }
+  .datos-card { background:var(--dark3); padding:40px; border-top:2px solid transparent; transition:border-color .3s, background .3s; }
+  .datos-card:hover { background:var(--dark4); border-top-color:var(--yellow); }
+  .datos-num { font-family:'Bebas Neue',sans-serif; font-size:56px; color:var(--yellow); line-height:1; }
+  .datos-label { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin:8px 0; }
+  .datos-desc { font-size:13px; line-height:1.7; color:var(--gray); font-weight:300; }
+  .datos-bottom { display:grid; grid-template-columns:1.5fr 1fr; gap:2px; margin-top:2px; }
+  .datos-bottom-card { background:var(--dark3); padding:40px; display:flex; gap:32px; align-items:center; }
+  .datos-bottom-card.featured { background:rgba(245,197,24,.08); border:1px solid rgba(245,197,24,.15); }
+  .datos-bottom-icon { color:var(--yellow); flex-shrink:0; }
+  .datos-bottom-title { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; margin-bottom:8px; }
+  .datos-bottom-text { font-size:13px; color:var(--gray); line-height:1.6; font-weight:300; }
+
+  /* ── PRUEBA REAL ── */
+  .prueba-box {
+    background: var(--dark3);
+    border: 1px solid rgba(245,197,24,.15);
+    padding: 64px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 64px;
+  }
+  .prueba-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--yellow);
+  }
+  .prueba-box::after {
+    content: '< />';
+    position: absolute;
+    right: 48px; top: 40px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    color: rgba(245,197,24,.06);
+    line-height: 1;
+  }
+  .prueba-tag { font-family:'Syne',sans-serif; font-size:10px; letter-spacing:4px; color:var(--yellow); text-transform:uppercase; margin-bottom:20px; }
+  .prueba-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,5vw,60px); line-height:1; margin-bottom:24px; }
+  .prueba-title em { color:var(--yellow); font-style:normal; }
+  .prueba-body { font-size:16px; line-height:1.8; color:rgba(245,240,232,.75); font-weight:300; max-width:680px; margin-bottom:40px; }
+  .prueba-pills { display:flex; flex-wrap:wrap; gap:10px; }
+  .prueba-pill { background:rgba(245,197,24,.08); border:1px solid rgba(245,197,24,.2); color:var(--yellow); font-family:'Syne',sans-serif; font-size:11px; letter-spacing:2px; padding:8px 18px; text-transform:uppercase; }
+
+  /* ── FAQ ── */
+  .faq-list { margin-top:64px; display:flex; flex-direction:column; gap:2px; }
+  .faq-item { background:var(--dark3); overflow:hidden; }
+  .faq-q { padding:28px 40px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-family:'Syne',sans-serif; font-weight:600; font-size:15px; transition:background .3s; user-select:none; }
+  .faq-q:hover { background:var(--dark4); }
+  .faq-icon { width:28px;height:28px; border:1px solid rgba(245,197,24,.3); display:flex; align-items:center; justify-content:center; color:var(--yellow); flex-shrink:0; transition:transform .3s, background .3s; font-size:18px; }
+  .faq-item.open .faq-icon { transform:rotate(45deg); background:var(--yellow); color:var(--dark); }
+  .faq-a { max-height:0; overflow:hidden; transition:max-height .4s ease, padding .4s ease; padding:0 40px; font-size:14px; line-height:1.8; color:rgba(245,240,232,.6); font-weight:300; }
+  .faq-item.open .faq-a { max-height:200px; padding:0 40px 28px; }
+
+  /* ── CTA FINAL ── */
+  #cta { padding:120px 48px; max-width:1200px; margin:0 auto; text-align:center; position:relative; z-index:2; }
+  .cta-box { background:var(--yellow); padding:80px; position:relative; overflow:hidden; }
+  .cta-box::before { content:'GINGER'; position:absolute; top:-40px;left:-20px; font-family:'Bebas Neue',sans-serif; font-size:200px; color:rgba(13,13,13,.05); line-height:1; pointer-events:none; }
+  .cta-title { font-family:'Bebas Neue',sans-serif; font-size:72px; color:var(--dark); line-height:.95; margin-bottom:24px; }
+  .cta-sub { font-size:18px; color:rgba(13,13,13,.6); font-weight:300; max-width:500px; margin:0 auto 48px; line-height:1.7; }
+  .cta-steps { display:flex; justify-content:center; gap:2px; margin-bottom:48px; }
+  .cta-step { background:rgba(13,13,13,.08); padding:24px 32px; flex:1; max-width:240px; text-align:left; }
+  .cta-step-num { font-family:'Bebas Neue',sans-serif; font-size:40px; color:var(--dark); opacity:.3; line-height:1; }
+  .cta-step-text { font-size:13px; color:rgba(13,13,13,.7); line-height:1.5; margin-top:8px; }
+  .cta-btn-group { display:flex; justify-content:center; gap:12px; }
+  .cta-btn { display:inline-flex; align-items:center; gap:12px; background:var(--dark); color:var(--yellow); padding:20px 40px; font-family:'Syne',sans-serif; font-weight:700; font-size:13px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; border:none; transition:all .3s; text-decoration:none; }
+  .cta-btn:hover { background:#1C1C1C; transform:scale(1.02); }
+  .cta-btn.wa { background:#075E54; color:#fff; }
+  .cta-btn.wa:hover { background:#128C7E; }
+
+  /* ── FOOTER ── */
+  footer { position:relative; z-index:2; border-top:1px solid rgba(245,197,24,.1); padding:36px 48px; display:flex; justify-content:space-between; align-items:center; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:4px; color:var(--yellow); }
+  .footer-text { font-size:12px; color:var(--gray); letter-spacing:1px; }
+
+  @media(max-width:768px) {
+    nav { padding:18px 24px; }
+    .nav-links { display:none; }
+    #hero { padding:100px 24px 60px; }
+    .hero-content,.diag-grid,.deal-cards,.split-section,.tech-grid,.maq-locations,.ganamos,.proy-grid,.prod-split,.propuesta-header,.datos-grid,.datos-bottom,.maq-hero { grid-template-columns:1fr; }
+    .proy-card.main { grid-column:span 1; }
+    section { padding:80px 24px; }
+    .cta-box { padding:48px 32px; }
+    .cta-steps { flex-direction:column; align-items:center; }
+    .cta-btn-group { flex-direction:column; align-items:center; }
+    footer { flex-direction:column; gap:12px; text-align:center; }
+    .carta-box,.prueba-box { padding:40px 28px; }
+    .timeline-item { grid-template-columns:48px 1fr; gap:20px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="progress-bar" id="progressBar"></div>
+
+<nav>
+  <div class="nav-logo">GingerShots</div>
+  <ul class="nav-links">
+    <li><a href="#propuesta">Propuesta</a></li>
+    <li><a href="#tecnologia">Tecnología</a></li>
+    <li><a href="#maquinas">Máquinas</a></li>
+    <li><a href="#ruta">Ruta</a></li>
+    <li><a href="#proyeccion">Proyección</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-ring"></div>
+  <div class="hero-ring"></div>
+  <div class="hero-content">
+    <div class="hero-left">
+      <p class="hero-eyebrow">Propuesta de expansión — Marzo 2025</p>
+      <h1 class="hero-title">GINGER<span>SHOTS</span>BOLIVIA</h1>
+      <p class="hero-sub">Un plan concreto para llevar lo que ya funciona en Santa Cruz al siguiente nivel — en dos ciudades, con tecnología real, sin que usted tenga que arriesgar nada.</p>
+      <a href="#carta" class="hero-cta">Leer la propuesta <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></a>
+    </div>
+    <div class="hero-right">
+      <div class="hero-card">
+        <p class="hero-card-title">En números — mes 9</p>
+        <div class="hero-stat"><span class="hero-stat-label">Mercados activos</span><span class="hero-stat-value accent">2</span></div>
+        <div class="hero-stat"><span class="hero-stat-label">Ingresos estimados / mes</span><span class="hero-stat-value">~17,000 BOB</span></div>
+        <div class="hero-stat"><span class="hero-stat-label">Margen neto</span><span class="hero-stat-value accent">55 – 65%</span></div>
+        <div class="hero-stat"><span class="hero-stat-label">Inversión de su parte</span><span class="hero-stat-value">$0 USD</span></div>
+        <div class="hero-stat"><span class="hero-stat-label">Payback máquina</span><span class="hero-stat-value accent">~2 meses</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-ind"><span>Scroll</span><div class="scroll-line"></div></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CARTA -->
+<div id="carta">
+  <div class="carta-box reveal">
+    <p class="section-label">Para empezar</p>
+    <p class="carta-text">"Esta página que está viendo fue creada por mí, enteramente desde cero y en menos de un día. Es completamente personalizable, escalable y adaptable. Se la presento porque quiero mostrarle no solo una idea — sino lo que soy capaz de construir. GingerShots merece crecer, y yo tengo las herramientas para hacerlo posible."</p>
+    <p class="carta-firma">— Juan José</p>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- DIAGNÓSTICO -->
+<section id="diagnostico">
+  <div class="reveal">
+    <p class="section-label">01 — El negocio hoy</p>
+    <h2 class="section-title">Fortalezas reales.<br><em>Un límite claro.</em></h2>
+    <p class="section-body">GingerShots tiene algo que la mayoría de los negocios no tiene: un producto que funciona de verdad. El problema no es el producto. Es la capacidad de llegar a más gente.</p>
+  </div>
+  <div class="diag-grid">
+    <div class="diag-card positive reveal reveal-delay-1">
+      <p class="diag-card-label">✦ Lo que funciona</p>
+      <div class="diag-item"><div class="diag-dot"></div><span>Producto natural sin competidor de marca en Bolivia</span></div>
+      <div class="diag-item"><div class="diag-dot"></div><span>Materia prima accesible y barata en el país</span></div>
+      <div class="diag-item"><div class="diag-dot"></div><span>Clientes que regresan — señal de que el producto convence</span></div>
+      <div class="diag-item"><div class="diag-dot"></div><span>Marca con identidad propia y trabajo ya invertido</span></div>
+      <div class="diag-item"><div class="diag-dot"></div><span>Margen bruto excepcional: 80–85% por unidad</span></div>
+    </div>
+    <div class="diag-card negative reveal reveal-delay-2">
+      <p class="diag-card-label">◦ El límite actual</p>
+      <div class="diag-item"><div class="diag-dot"></div><span>Una sola persona no puede producir, vender y crecer al mismo tiempo</span></div>
+      <div class="diag-item"><div class="diag-dot"></div><span>Sin presencia digital no hay forma de llegar a nuevos clientes constantemente</span></div>
+      <div class="diag-item"><div class="diag-dot"></div><span>La Paz es un mercado virgen — nadie lo está aprovechando</span></div>
+      <div class="diag-item"><div class="diag-dot"></div><span>Sin herramientas, es imposible medir qué funciona y qué no</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROPUESTA -->
+<section id="propuesta">
+  <div class="propuesta-header">
+    <div class="reveal">
+      <p class="section-label">02 — La propuesta</p>
+      <h2 class="section-title">Qué pone<br><em>cada uno.</em></h2>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <p class="section-body">Una alianza donde usted no arriesga nada y yo traigo todo lo que el negocio necesita para escalar. Santa Cruz sigue siendo 100% suyo.</p>
+    </div>
+  </div>
+  <div class="deal-cards">
+    <div class="deal-card reveal reveal-delay-1">
+      <p class="deal-card-who">Usted</p>
+      <p class="deal-card-role">Santa Cruz — La base</p>
+      <div class="deal-item"><span class="deal-icon">→</span><span>La receta y el proceso de producción — una sola vez</span></div>
+      <div class="deal-item"><span class="deal-icon">→</span><span>Permiso para usar la marca GingerShots en La Paz</span></div>
+      <div class="deal-item"><span class="deal-icon">→</span><span>Asesoría puntual cuando tenga dudas de producción</span></div>
+      <div class="deal-item"><span class="deal-icon">→</span><span>Inversión de su parte: $0 USD</span></div>
+    </div>
+    <div class="deal-card featured reveal reveal-delay-2">
+      <p class="deal-card-who">Yo</p>
+      <p class="deal-card-role">La Paz — El brazo tecnológico</p>
+      <div class="deal-item"><span class="deal-icon">→</span><span>Capital inicial para arrancar La Paz</span></div>
+      <div class="deal-item"><span class="deal-icon">→</span><span>Producción propia con su receta y estándares</span></div>
+      <div class="deal-item"><span class="deal-icon">→</span><span>Toda la tecnología del negocio — sin costo para usted</span></div>
+      <div class="deal-item"><span class="deal-icon">→</span><span>Asumo todo el riesgo de La Paz</span></div>
+    </div>
+  </div>
+  <div class="split-section">
+    <div class="split-box reveal">
+      <div class="split-number">50/50</div>
+      <div class="split-label">Ganancias de La Paz — una vez recuperada la inversión</div>
+      <div class="split-desc">Hasta recuperar lo invertido, las ganancias de La Paz son mías. Después dividimos a la mitad. Santa Cruz sigue siendo 100% suyo en todo momento.</div>
+    </div>
+    <div class="split-box reveal reveal-delay-2">
+      <div class="split-number">0</div>
+      <div class="split-label">Riesgo para usted si no funciona</div>
+      <div class="split-desc">Si en 3 meses La Paz no tiene demanda real, cerramos sin drama. Usted no puso nada, usted no pierde nada. El riesgo es completamente mío.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TECNOLOGÍA -->
+<section id="tecnologia">
+  <div class="reveal">
+    <p class="section-label">03 — Lo que yo traigo</p>
+    <h2 class="section-title">Tecnología que<br><em>trabaja sola.</em></h2>
+    <p class="section-body">Soy estudiante de Ingeniería de Sistemas. Lo que para un negocio normal costaría contratar a varias personas, yo lo hago solo. Y todo lo que construya para La Paz, usted lo usa en Santa Cruz también.</p>
+  </div>
+  <div class="tech-grid">
+    <div class="tech-card reveal reveal-delay-1">
+      <div class="tech-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+      <div class="tech-title">Página web + tienda online</div>
+      <div class="tech-desc">Sitio profesional con catálogo, historia de marca y precios. Tienda online con carrito y pagos por QR / Tigo Money. Funciona para Santa Cruz y La Paz desde el mismo lugar.</div>
+      <span class="tech-tag">Costo para usted: $0</span>
+    </div>
+    <div class="tech-card reveal reveal-delay-2">
+      <div class="tech-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M12 8V4M8 4h8M7 12h.01M17 12h.01M9 16h6"/></svg></div>
+      <div class="tech-title">Bot de WhatsApp automatizado</div>
+      <div class="tech-desc">Respuestas automáticas 24/7, toma de pedidos automática, confirmaciones y recordatorios de entrega. Recordatorio de recompra semanal para clientes frecuentes.</div>
+      <span class="tech-tag">Sin personal extra</span>
+    </div>
+    <div class="tech-card reveal reveal-delay-3">
+      <div class="tech-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></div>
+      <div class="tech-title">Redes sociales y contenido</div>
+      <div class="tech-desc">Gestión de Instagram y TikTok con calendario de publicaciones. Campañas de publicidad pagada desde 200 BOB/mes. Estrategia de contenido: recetas, beneficios, detrás de cámaras.</div>
+      <span class="tech-tag">Doble alcance</span>
+    </div>
+    <div class="tech-card reveal reveal-delay-1">
+      <div class="tech-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+      <div class="tech-title">Dashboard de ventas</div>
+      <div class="tech-desc">Panel visual donde los dos pueden ver en tiempo real: ventas del día, semana y mes. Qué producto vende más, en qué zona, a qué hora. Acceso desde el celular.</div>
+      <span class="tech-tag">Tiempo real</span>
+    </div>
+    <div class="tech-card reveal reveal-delay-2">
+      <div class="tech-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg></div>
+      <div class="tech-title">Base de datos de clientes</div>
+      <div class="tech-desc">Registro de cada cliente: nombre, zona, producto favorito, frecuencia de compra. Permite saber quiénes son los mejores clientes y dónde están. Ofertas personalizadas automáticas.</div>
+      <span class="tech-tag">Retención</span>
+    </div>
+    <div class="tech-card reveal reveal-delay-3">
+      <div class="tech-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16v-2"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg></div>
+      <div class="tech-title">Gestión de stock y producción</div>
+      <div class="tech-desc">Sistema que predice cuánto hay que producir cada semana según la demanda histórica. Evita quedarse sin producto y evita desperdiciar ingredientes frescos.</div>
+      <span class="tech-tag">Cero desperdicios</span>
+    </div>
+  </div>
+</section>
+
+<!-- ANÁLISIS DE DATOS -->
+<section id="datos">
+  <div class="reveal">
+    <p class="section-label">04 — Análisis de datos</p>
+    <h2 class="section-title">Saber dónde<br><em>atacar.</em></h2>
+    <p class="section-body">No se trata de vender más — se trata de vender mejor. Con datos reales podemos identificar exactamente qué zonas, qué horarios y qué perfiles de cliente generan más ingresos, y concentrar el esfuerzo ahí.</p>
+  </div>
+  <div class="datos-grid">
+    <div class="datos-card reveal reveal-delay-1">
+      <div class="datos-num">01</div>
+      <div class="datos-label">Mapa de calor de ventas</div>
+      <div class="datos-desc">Visualización geográfica de dónde compran los clientes. Identifica los barrios con mayor demanda para ubicar puntos de venta y máquinas expendedoras con precisión.</div>
+    </div>
+    <div class="datos-card reveal reveal-delay-2">
+      <div class="datos-num">02</div>
+      <div class="datos-label">Análisis de frecuencia</div>
+      <div class="datos-desc">¿Cuándo compra la gente? ¿Qué días? ¿A qué hora? Con esos datos se optimizan los horarios de producción y se lanzan promociones en el momento exacto.</div>
+    </div>
+    <div class="datos-card reveal reveal-delay-3">
+      <div class="datos-num">03</div>
+      <div class="datos-label">Segmentación de clientes</div>
+      <div class="datos-desc">Quién compra más, qué producto prefiere, con qué frecuencia regresa. Permite ofrecer descuentos a los clientes correctos y no gastar en quienes no van a volver.</div>
+    </div>
+  </div>
+  <div class="datos-bottom">
+    <div class="datos-bottom-card featured reveal">
+      <div class="datos-bottom-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div>
+        <div class="datos-bottom-title">Predicción de demanda</div>
+        <div class="datos-bottom-text">Con 60 días de datos, el sistema puede predecir cuánto se va a vender la semana siguiente con un margen de error menor al 15%. Nunca más falta producto ni se desperdicia producción.</div>
+      </div>
+    </div>
+    <div class="datos-bottom-card reveal reveal-delay-2">
+      <div class="datos-bottom-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      </div>
+      <div>
+        <div class="datos-bottom-title">Reportes automáticos</div>
+        <div class="datos-bottom-text">Cada lunes llega un resumen automático al celular con los números de la semana — sin tener que buscar nada ni calcular nada a mano.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCCIÓN -->
+<section id="produccion">
+  <div class="reveal">
+    <p class="section-label">05 — Producción en La Paz</p>
+    <h2 class="section-title">Sin depender<br><em>del envío.</em></h2>
+    <p class="section-body">No le voy a pedir que me mande producto. Aprendo a producir en La Paz con los mismos ingredientes — el jengibre, el limón y la cúrcuma se consiguen frescos en el Mercado Rodríguez todo el año.</p>
+  </div>
+  <div class="prod-split">
+    <div class="prod-table reveal reveal-delay-1">
+      <div class="prod-table-header"><span>Insumo / Equipo</span><span>Costo</span><span>Dónde</span></div>
+      <div class="prod-table-row"><span>Extractor de jugos industrial</span><span>400–800 BOB</span><span>Mercado LP</span></div>
+      <div class="prod-table-row"><span>Botellas de vidrio 60ml × 100</span><span>150–250 BOB</span><span>Packaging</span></div>
+      <div class="prod-table-row"><span>Etiquetas impresas (primer lote)</span><span>80–150 BOB</span><span>Imprenta</span></div>
+      <div class="prod-table-row"><span>Ingredientes primer lote</span><span>100–200 BOB</span><span>Mcdo. Rodríguez</span></div>
+      <div class="prod-table-row"><span>Tapas + materiales sellado</span><span>50–100 BOB</span><span>Packaging</span></div>
+      <div class="prod-table-row total"><span>TOTAL arranque</span><span>~780–1,500 BOB</span><span>~$110–215</span></div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="prod-highlight">
+        <div class="prod-highlight-title">La receta</div>
+        <div class="prod-highlight-sub">es todo lo que necesito</div>
+        <div class="prod-highlight-text">No pesa, no caduca, no tiene costo de envío. Una sola conversación y tengo todo lo que necesito para arrancar en La Paz.</div>
+      </div>
+      <div class="prod-highlight">
+        <div class="prod-highlight-title">Su sello</div>
+        <div class="prod-highlight-sub">garantiza la calidad</div>
+        <div class="prod-highlight-text">Antes de salir al mercado, usted aprueba el producto. Si no cumple el estándar, no sale. Su marca no se compromete nunca.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MÁQUINAS -->
+<section id="maquinas">
+  <div class="reveal">
+    <p class="section-label">06 — Máquinas expendedoras</p>
+    <h2 class="section-title">Ventas mientras<br><em>duerme.</em></h2>
+  </div>
+  <div class="maq-hero reveal">
+    <div>
+      <div class="maq-stat-big">24/7</div>
+      <div class="maq-stat-label">Sin personal presente.<br>Sin horarios. Sin días libres.<br>La máquina trabaja sola.</div>
+    </div>
+    <div>
+      <div class="maq-feature"><div class="maq-feature-num">01</div><div><div class="maq-feature-title">No existe en Bolivia</div><div class="maq-feature-desc">No hay ninguna máquina de shots naturales en el país. Seríamos los primeros.</div></div></div>
+      <div class="maq-feature"><div class="maq-feature-num">02</div><div><div class="maq-feature-title">Payback en 2 meses</div><div class="maq-feature-desc">Con una buena ubicación, la inversión se recupera en 6–8 semanas.</div></div></div>
+      <div class="maq-feature"><div class="maq-feature-num">03</div><div><div class="maq-feature-title">La máquina es publicidad</div><div class="maq-feature-desc">Genera curiosidad, llama la atención y atrae clientes nuevos sola.</div></div></div>
+    </div>
+  </div>
+  <div class="maq-locations">
+    <div class="maq-loc reveal reveal-delay-1"><div><div class="maq-loc-name">UCB — Universidad Católica</div><div class="maq-loc-sub">La Paz · Campus principal</div></div><div class="maq-loc-stat"><div class="maq-loc-num">30–50</div><div class="maq-loc-unit">shots / día</div></div></div>
+    <div class="maq-loc reveal reveal-delay-2"><div><div class="maq-loc-name">UMSA — Ciudad Universitaria</div><div class="maq-loc-sub">La Paz · 10,000+ personas/día</div></div><div class="maq-loc-stat"><div class="maq-loc-num">50–80</div><div class="maq-loc-unit">shots / día</div></div></div>
+    <div class="maq-loc reveal reveal-delay-3"><div><div class="maq-loc-name">Gimnasio Premium</div><div class="maq-loc-sub">Zona Sur · La Paz</div></div><div class="maq-loc-stat"><div class="maq-loc-num">20–40</div><div class="maq-loc-unit">shots / día</div></div></div>
+    <div class="maq-loc reveal reveal-delay-4"><div><div class="maq-loc-name">Edificio de oficinas</div><div class="maq-loc-sub">Sopocachi · La Paz</div></div><div class="maq-loc-stat"><div class="maq-loc-num">20–35</div><div class="maq-loc-unit">shots / día</div></div></div>
+  </div>
+</section>
+
+<!-- RUTA -->
+<section id="ruta">
+  <div class="reveal">
+    <p class="section-label">07 — Plan de acción</p>
+    <h2 class="section-title">Los primeros<br><em>6 meses.</em></h2>
+    <p class="section-body">Paso a paso, sin apresurarse. Primero probamos demanda. Después escalamos con datos reales en la mano.</p>
+  </div>
+  <div class="timeline">
+    <div class="timeline-item reveal">
+      <div class="timeline-badge"><div class="timeline-badge-num">01</div><div class="timeline-badge-label">MES 1</div></div>
+      <div class="timeline-content"><div class="timeline-title">Bases — acuerdo y producción</div><div class="timeline-tasks"><div class="timeline-task">Acuerdo formal: receta, marca, modelo financiero</div><div class="timeline-task">Compra de equipamiento básico de producción en La Paz</div><div class="timeline-task">Primeras pruebas de producción y ajuste de receta</div><div class="timeline-task">WhatsApp Business, Instagram y TikTok activos</div><div class="timeline-task">Primeras 20 ventas directas a conocidos</div></div></div>
+    </div>
+    <div class="timeline-item reveal">
+      <div class="timeline-badge"><div class="timeline-badge-num">02</div><div class="timeline-badge-label">MES 2</div></div>
+      <div class="timeline-content"><div class="timeline-title">Primeras ventas reales</div><div class="timeline-tasks"><div class="timeline-task">Bot de WhatsApp automatizado funcionando</div><div class="timeline-task">Venta activa en universidades y gimnasios de La Paz</div><div class="timeline-task">Primera campaña de publicidad pagada: 300 BOB en Instagram Ads</div><div class="timeline-task">Base de datos de primeros 50 clientes</div></div></div>
+    </div>
+    <div class="timeline-item reveal">
+      <div class="timeline-badge"><div class="timeline-badge-num">03</div><div class="timeline-badge-label">MES 3</div></div>
+      <div class="timeline-content"><div class="timeline-title">Tecnología completa</div><div class="timeline-tasks"><div class="timeline-task">Página web con tienda online en funcionamiento</div><div class="timeline-task">Dashboard de ventas accesible para ambos desde el celular</div><div class="timeline-task">Evaluación: ¿cuánto vendemos? ¿dónde? ¿a quién?</div><div class="timeline-task">Decisión informada sobre si proceder con la máquina</div></div></div>
+    </div>
+    <div class="timeline-item reveal">
+      <div class="timeline-badge"><div class="timeline-badge-num">04</div><div class="timeline-badge-label">MES 4–5</div></div>
+      <div class="timeline-content"><div class="timeline-title">Primera máquina expendedora</div><div class="timeline-tasks"><div class="timeline-task">Importación desde Chile vía Mercado Libre</div><div class="timeline-task">Instalación en el punto de mayor demanda identificado</div><div class="timeline-task">Operación simultánea: delivery + máquina</div></div></div>
+    </div>
+    <div class="timeline-item reveal">
+      <div class="timeline-badge"><div class="timeline-badge-num">05</div><div class="timeline-badge-label">MES 6</div></div>
+      <div class="timeline-content"><div class="timeline-title">Evaluación y siguiente nivel</div><div class="timeline-tasks"><div class="timeline-task">Revisión completa de resultados con números reales</div><div class="timeline-task">Decisión sobre segunda máquina y formalización (NIT)</div><div class="timeline-task">Evaluación de ingresar a tiendas o supermercados en La Paz</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROYECCIÓN -->
+<section id="proyeccion">
+  <div class="reveal">
+    <p class="section-label">08 — Proyección financiera</p>
+    <h2 class="section-title">Los números<br><em>hablan solos.</em></h2>
+  </div>
+  <div class="proy-grid">
+    <div class="proy-card reveal reveal-delay-1"><div class="proy-value">80%</div><div class="proy-label">Margen bruto / unidad</div><div class="proy-sub">Costo: ~2 BOB · Precio: ~12 BOB</div></div>
+    <div class="proy-card reveal reveal-delay-2"><div class="proy-value">2 mes</div><div class="proy-label">Payback máquina</div><div class="proy-sub">Con buena ubicación</div></div>
+    <div class="proy-card main reveal reveal-delay-3"><div class="proy-value">~17,000</div><div class="proy-label">BOB ingresos / mes estimados</div><div class="proy-sub">La Paz — mes 9 con máquina activa</div></div>
+    <div class="proy-card reveal reveal-delay-1"><div class="proy-value">450</div><div class="proy-label">Shots / mes máquina</div><div class="proy-sub">15 shots/día en ubicación buena</div></div>
+    <div class="proy-card reveal reveal-delay-2"><div class="proy-value">55–65%</div><div class="proy-label">Margen neto real</div><div class="proy-sub">Incluye distribución y marketing</div></div>
+  </div>
+  <div class="ganamos">
+    <div class="gana-card tia reveal">
+      <div class="gana-who">Usted gana</div>
+      <div class="gana-role">Santa Cruz — sin mover nada</div>
+      <div class="gana-item"><span class="gana-check">→</span><span>Sus ventas actuales en Santa Cruz sin tocar</span></div>
+      <div class="gana-item"><span class="gana-check">→</span><span>~5,000 BOB/mes adicionales de La Paz (50/50)</span></div>
+      <div class="gana-item"><span class="gana-check">→</span><span>Página web profesional y tienda online gratis</span></div>
+      <div class="gana-item"><span class="gana-check">→</span><span>Bot de WhatsApp y dashboard de ventas</span></div>
+      <div class="gana-item"><span class="gana-check">→</span><span>Presencia en La Paz sin invertir nada</span></div>
+      <div class="gana-item"><span class="gana-check">→</span><span>Cero riesgo — yo asumo todo</span></div>
+    </div>
+    <div class="gana-card yo reveal reveal-delay-2">
+      <div class="gana-who">Yo gano</div>
+      <div class="gana-role">La Paz — mi responsabilidad</div>
+      <div class="gana-item"><span class="gana-check">→</span><span>~5,000 BOB/mes (50/50) después de recuperar inversión</span></div>
+      <div class="gana-item"><span class="gana-check">→</span><span>Experiencia real manejando un negocio</span></div>
+      <div class="gana-item"><span class="gana-check">→</span><span>Un negocio propio que escala con mi esfuerzo</span></div>
+      <div class="gana-item"><span class="gana-check">→</span><span>La infraestructura tecnológica que construya</span></div>
+      <div class="gana-item"><span class="gana-check">→</span><span>Aprendizaje de producción, ventas y operaciones</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRUEBA REAL -->
+<section id="prueba">
+  <div class="prueba-box reveal">
+    <p class="prueba-tag">Prueba en vivo</p>
+    <h2 class="prueba-title">Esta página es<br><em>la demostración.</em></h2>
+    <p class="prueba-body">Lo que usted está viendo ahora mismo es una página web creada por mí, enteramente desde cero y en menos de un día. Sin plantillas, sin herramientas de diseño, sin equipo. Solo código. Es completamente personalizable, escalable y adaptable a lo que el negocio necesite en cada etapa. Esto es solo el punto de partida de lo que puedo construir para GingerShots.</p>
+    <div class="prueba-pills">
+      <span class="prueba-pill">Animaciones personalizadas</span>
+      <span class="prueba-pill">Diseño 100% original</span>
+      <span class="prueba-pill">Listo en &lt; 24 horas</span>
+      <span class="prueba-pill">Cero plantillas</span>
+      <span class="prueba-pill">Escalable</span>
+      <span class="prueba-pill">Adaptable</span>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="reveal">
+    <p class="section-label">09 — Preguntas</p>
+    <h2 class="section-title">Lo que probablemente<br><em>se pregunta.</em></h2>
+  </div>
+  <div class="faq-list reveal">
+    <div class="faq-item"><div class="faq-q"><span>¿Y si la gente de La Paz no compra?</span><span class="faq-icon">+</span></div><div class="faq-a">Por eso empezamos pequeño — con ventas directas y sin máquina. Si en 3 meses no hay demanda real, cerramos La Paz sin que usted pierda nada. El riesgo es completamente mío.</div></div>
+    <div class="faq-item"><div class="faq-q"><span>¿Y si la calidad no es la misma que en Santa Cruz?</span><span class="faq-icon">+</span></div><div class="faq-a">Antes de salir al mercado, usted aprueba el producto que yo hago. Si no cumple el estándar, no sale. Su marca no se compromete nunca.</div></div>
+    <div class="faq-item"><div class="faq-q"><span>¿No es muy complicado manejar dos ciudades?</span><span class="faq-icon">+</span></div><div class="faq-a">Con el dashboard, el bot y la base de datos que voy a construir, va a ser más fácil manejar dos ciudades que lo que es hoy manejar una sola sin herramientas.</div></div>
+    <div class="faq-item"><div class="faq-q"><span>¿Qué pasa si decidimos separarnos?</span><span class="faq-icon">+</span></div><div class="faq-a">Simple: cada ciudad es independiente. Usted se queda con Santa Cruz al 100% y yo cierro La Paz. Sin complicaciones, sin demandas, sin roces.</div></div>
+    <div class="faq-item"><div class="faq-q"><span>¿Necesito firmar algo?</span><span class="faq-icon">+</span></div><div class="faq-a">No es necesario al principio. Un acuerdo claro entre los dos, por escrito, es suficiente para arrancar. Cuando crezcamos lo formalizamos con un abogado.</div></div>
+    <div class="faq-item"><div class="faq-q"><span>¿Cuándo empezaría todo esto?</span><span class="faq-icon">+</span></div><div class="faq-a">En el momento en que usted diga que sí, arranco el mes 1. Lo único que necesito es una llamada donde me explique la receta y el proceso. Con eso me pongo a trabajar.</div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div id="cta">
+  <div class="cta-box reveal">
+    <h2 class="cta-title">TRES PASOS.<br>ESO ES TODO.</h2>
+    <p class="cta-sub">No hace falta más que una conversación para arrancar. El resto lo manejo yo.</p>
+    <div class="cta-steps">
+      <div class="cta-step"><div class="cta-step-num">01</div><div class="cta-step-text">Una llamada donde me explica la receta y el proceso</div></div>
+      <div class="cta-step"><div class="cta-step-num">02</div><div class="cta-step-text">Su aprobación para usar la marca en La Paz</div></div>
+      <div class="cta-step"><div class="cta-step-num">03</div><div class="cta-step-text">Acordar cómo dividimos las ganancias de La Paz</div></div>
+    </div>
+    <div class="cta-btn-group">
+      <a class="cta-btn wa" href="https://wa.me/59165830355?text=Empecemos%20%F0%9F%AB%9A%F0%9F%93%8D" target="_blank">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.115 1.531 5.842L.057 23.945l6.293-1.451A11.938 11.938 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.811 9.811 0 0 1-5.007-1.368l-.36-.214-3.733.861.894-3.629-.235-.373A9.77 9.77 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182c5.43 0 9.818 4.388 9.818 9.818 0 5.43-4.388 9.818-9.818 9.818z"/></svg>
+        Hablemos por WhatsApp
+      </a>
+      <a class="cta-btn" href="#carta">Volver al inicio</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">GINGERSHOTS · BOLIVIA</div>
+  <div class="footer-text">Propuesta confidencial · Marzo 2025</div>
+</footer>
+
+<script>
+// ── CURSOR punto simple ──
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+});
+document.querySelectorAll('a,button,.faq-q,.tech-card,.maq-loc,.datos-card').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('active'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('active'));
+});
+
+// ── PROGRESS BAR ──
+const bar = document.getElementById('progressBar');
+window.addEventListener('scroll', () => {
+  const h = document.body.scrollHeight - window.innerHeight;
+  bar.style.width = (window.scrollY / h * 100) + '%';
+}, { passive: true });
+
+// ── REVEAL ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── FAQ ──
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => {
+    const item = q.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+
+// ── CANVAS PARALLAX — partículas visibles con hex grid ──
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [], scrollY = 0, mouseX = 0, mouseY = 0;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', () => { resize(); initParticles(); }, { passive: true });
+resize();
+window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
+window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; }, { passive: true });
+
+// ── Hexagonal background grid (scrolls slowly) ──
+function drawHexGrid() {
+  const size = 64;
+  const cols = Math.ceil(W / (size * 1.5)) + 3;
+  const rows = Math.ceil(H / (size * Math.sqrt(3))) + 3;
+  const offsetY = (scrollY * 0.06) % (size * Math.sqrt(3));
+  ctx.strokeStyle = 'rgba(245,197,24,0.055)';
+  ctx.lineWidth = 0.8;
+  for (let c = -1; c < cols; c++) {
+    for (let r = -1; r < rows; r++) {
+      const x = c * size * 1.5;
+      const y = r * size * Math.sqrt(3) + (c % 2 === 0 ? 0 : size * Math.sqrt(3) / 2) - offsetY;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = Math.PI / 180 * (60 * i - 30);
+        const px = x + size * 0.88 * Math.cos(angle);
+        const py = y + size * 0.88 * Math.sin(angle);
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+}
+
+// ── Floating geometric particles ──
+class Particle {
+  constructor() { this.reset(true); }
+  reset(init) {
+    this.x     = Math.random() * W;
+    this.y     = init ? Math.random() * H : H + 30;
+    this.r     = Math.random() * 2.2 + 0.8;          // bigger dots
+    this.vx    = (Math.random() - .5) * 0.18;
+    this.vy    = -(Math.random() * 0.4 + 0.08);
+    this.a     = Math.random() * 0.55 + 0.25;         // more visible
+    this.pulse = Math.random() * Math.PI * 2;
+    this.shape = Math.random() < .35 ? 'line' : 'dot';
+    this.len   = Math.random() * 28 + 10;
+    this.angle = Math.random() * Math.PI;
+    this.parallax = 0.025 + Math.random() * 0.055;
+  }
+  update() {
+    this.pulse += 0.009;
+    this.x += this.vx + (mouseX / W - 0.5) * this.parallax * 0.8;
+    this.y += this.vy - (scrollY * this.parallax * 0.0012);
+    if (this.y < -40) this.reset(false);
+    if (this.x < -10) this.x = W + 10;
+    if (this.x > W + 10) this.x = -10;
+  }
+  draw() {
+    const alpha = this.a * (0.65 + 0.35 * Math.sin(this.pulse));
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle   = 'rgba(245,197,24,1)';
+    ctx.strokeStyle = 'rgba(245,197,24,1)';
+    if (this.shape === 'dot') {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(this.x, this.y);
+      ctx.lineTo(this.x + Math.cos(this.angle) * this.len, this.y + Math.sin(this.angle) * this.len);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+function initParticles() {
+  particles = [];
+  const count = Math.min(160, Math.floor((W * H) / 8000));
+  for (let i = 0; i < count; i++) particles.push(new Particle());
+}
+initParticles();
+
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+
+  drawHexGrid();
+  particles.forEach(p => { p.update(); p.draw(); });
+
+  // Connections between nearby particles
+  ctx.lineWidth = 0.4;
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const d  = Math.sqrt(dx * dx + dy * dy);
+      if (d < 100) {
+        ctx.globalAlpha = (1 - d / 100) * 0.12;
+        ctx.strokeStyle = 'rgba(245,197,24,1)';
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
